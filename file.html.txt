@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#1a1a2e">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="manifest.json">
+    <title>FinanceTracker</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app">
+        <header class="header">
+            <h1>💰 FinanceTracker</h1>
+            <span id="current-month" class="month-display"></span>
+        </header>
+
+        <section class="summary-cards">
+            <div class="card balance">
+                <span class="card-label">Solde du mois</span>
+                <span id="total-balance" class="card-value">0,00 €</span>
+            </div>
+            <div class="card-row">
+                <div class="card income">
+                    <span class="card-label">Revenus</span>
+                    <span id="total-income" class="card-value small">+0,00 €</span>
+                </div>
+                <div class="card expense">
+                    <span class="card-label">Dépenses</span>
+                    <span id="total-expenses" class="card-value small">-0,00 €</span>
+                </div>
+            </div>
+        </section>
+
+        <nav class="tabs">
+            <button class="tab active" data-tab="transactions">Transactions</button>
+            <button class="tab" data-tab="budget">Budget</button>
+            <button class="tab" data-tab="savings">Épargne</button>
+            <button class="tab" data-tab="stats">Stats</button>
+        </nav>
+
+        <main class="tab-content">
+            <section id="transactions" class="tab-panel active">
+                <div class="section-header">
+                    <h2>Transactions du mois</h2>
+                    <button id="add-transaction-btn" class="btn-icon">+ Ajouter</button>
+                </div>
+                <div id="transactions-list" class="list"></div>
+            </section>
+
+            <section id="budget" class="tab-panel">
+                <div class="section-header">
+                    <h2>Budgets par catégorie</h2>
+                    <button id="add-budget-btn" class="btn-icon">+ Ajouter</button>
+                </div>
+                <div id="budget-list" class="list"></div>
+            </section>
+
+            <section id="savings" class="tab-panel">
+                <div class="section-header">
+                    <h2>Objectifs d'épargne</h2>
+                    <button id="add-savings-btn" class="btn-icon">+ Ajouter</button>
+                </div>
+                <div id="savings-list" class="list"></div>
+            </section>
+
+            <section id="stats" class="tab-panel">
+                <h2 style="margin-bottom: 16px;">Statistiques</h2>
+                <div class="stats-container">
+                    <div class="stat-card">
+                        <h3>Répartition des dépenses</h3>
+                        <div id="expense-chart-container">
+                            <canvas id="expense-chart"></canvas>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Évolution 6 derniers mois</h3>
+                        <canvas id="monthly-chart"></canvas>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modal Transaction -->
+    <div id="transaction-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Nouvelle transaction</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <form id="transaction-form">
+                <div class="form-group">
+                    <label>Type</label>
+                    <div class="toggle-group">
+                        <button type="button" class="toggle active" data-type="expense">Dépense</button>
+                        <button type="button" class="toggle" data-type="income">Revenu</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="t-amount">Montant (€)</label>
+                    <input type="number" id="t-amount" step="0.01" min="0" required placeholder="0.00">
+                </div>
+                <div class="form-group">
+                    <label for="t-category">Catégorie</label>
+                    <select id="t-category" required></select>
+                </div>
+                <div class="form-group">
+                    <label for="t-description">Description</label>
+                    <input type="text" id="t-description" placeholder="Ex : Courses Carrefour">
+                </div>
+                <div class="form-group">
+                    <label for="t-date">Date</label>
+                    <input type="date" id="t-date" required>
+                </div>
+                <button type="submit" class="btn-primary">Enregistrer</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Budget -->
+    <div id="budget-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Nouveau budget</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <form id="budget-form">
+                <div class="form-group">
+                    <label for="b-category">Catégorie</label>
+                    <select id="b-category" required></select>
+                </div>
+                <div class="form-group">
+                    <label for="b-amount">Budget mensuel (€)</label>
+                    <input type="number" id="b-amount" step="0.01" min="0" required placeholder="0.00">
+                </div>
+                <button type="submit" class="btn-primary">Enregistrer</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Épargne -->
+    <div id="savings-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Nouvel objectif d'épargne</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <form id="savings-form">
+                <div class="form-group">
+                    <label for="s-name">Nom de l'objectif</label>
+                    <input type="text" id="s-name" required placeholder="Ex : Vacances été">
+                </div>
+                <div class="form-group">
+                    <label for="s-target">Objectif (€)</label>
+                    <input type="number" id="s-target" step="0.01" min="0" required placeholder="0.00">
+                </div>
+                <div class="form-group">
+                    <label for="s-current">Déjà épargné (€)</label>
+                    <input type="number" id="s-current" step="0.01" min="0" value="0" placeholder="0.00">
+                </div>
+                <div class="form-group">
+                    <label for="s-deadline">Date limite (optionnel)</label>
+                    <input type="date" id="s-deadline">
+                </div>
+                <div class="form-group">
+                    <label for="s-color">Couleur</label>
+                    <input type="color" id="s-color" value="#6c5ce7">
+                </div>
+                <button type="submit" class="btn-primary">Enregistrer</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Ajouter à l'épargne -->
+    <div id="add-to-savings-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Ajouter à l'épargne</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <form id="add-to-savings-form">
+                <input type="hidden" id="ats-id">
+                <div class="form-group">
+                    <label for="ats-amount">Montant à ajouter (€)</label>
+                    <input type="number" id="ats-amount" step="0.01" min="0" required placeholder="0.00">
+                </div>
+                <button type="submit" class="btn-primary">Ajouter</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="[cdn.jsdelivr.net](https://cdn.jsdelivr.net/npm/chart.js)"></script>
+    <script src="app.js"></script>
+</body>
+</html>
